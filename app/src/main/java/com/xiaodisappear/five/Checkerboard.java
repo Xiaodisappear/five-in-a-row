@@ -73,8 +73,10 @@ public class Checkerboard {
 
     private List<SquareRec> blackPerson;
 
-
     private List<String> existPoint;
+
+    private AIChess mAIChess;
+
 
     public Checkerboard(@NonNull float[] leftTop, int horizontalNumber, int verticallNumber,
             int boardWidth, int boardHeight) {
@@ -98,6 +100,10 @@ public class Checkerboard {
 
         if (existPoint == null) {
             existPoint = new ArrayList<>();
+        }
+
+        if (mAIChess == null) {
+            mAIChess = new AIChess(verticallNumber, horizontalNumber);
         }
     }
 
@@ -125,6 +131,21 @@ public class Checkerboard {
     public float getChessHeight() {
         return chessHeight;
     }
+
+    /**
+     * Get red walking.
+     */
+    public List<SquareRec> getRedPerson() {
+        return redPerson;
+    }
+
+    /**
+     * Get black walking.
+     */
+    public List<SquareRec> getBlackPerson() {
+        return blackPerson;
+    }
+
 
     /**
      * Cover board coordinates.
@@ -276,48 +297,51 @@ public class Checkerboard {
         return chessHors;
     }
 
+    /**
+     * add step.
+     */
     public void addChess(float[] coodinate) {
 
-        if (!isContainBoard(coodinate)) {
-            return;
+        try {
+            if (!isContainBoard(coodinate)) {
+                return;
+            }
+
+            int herIndex = searchHerIndex(coodinate[0]);
+
+            int verIndex = searchVerIndex(coodinate[1]);
+
+            if (herIndex == -1 || verIndex == -1) {
+                return;
+            }
+
+            if (existPoint == null) {
+                existPoint = new ArrayList<>();
+            }
+
+            String value = new StringBuffer().append(String.valueOf(herIndex)).append(
+                    String.valueOf(verIndex)).toString();
+            if (existPoint.contains(value)) {
+                return;
+            }
+
+            existPoint.add(value);
+
+            SquareRec tagSquare = boardSquare.get(verIndex + 1).get(herIndex);
+
+            if (redPerson.size() <= blackPerson.size()) {
+                redPerson.add(tagSquare);
+                mAIChess.addRedLocation(new ChessLocation(herIndex, verIndex));
+            } else {
+                blackPerson.add(tagSquare);
+                mAIChess.addBlackLocation(new ChessLocation(herIndex, verIndex));
+            }
+        } catch (Exception e) {
+            LogUtil.e(e.getMessage());
+            e.printStackTrace();
         }
-
-        int herIndex = searchHerIndex(coodinate[0]);
-
-        int verIndex = searchVerIndex(coodinate[1]);
-
-        if (herIndex == -1 || verIndex == -1) {
-            return;
-        }
-
-        if (existPoint == null) {
-            existPoint = new ArrayList<>();
-        }
-
-        String value = new StringBuffer().append(String.valueOf(herIndex)).append(String.valueOf(verIndex)).toString();
-        if (existPoint.contains(value)) {
-            return;
-        }
-
-        existPoint.add(value);
-
-        SquareRec tagSquare = boardSquare.get(verIndex + 1).get(herIndex);
-
-        if (redPerson.size() <= blackPerson.size()) {
-            redPerson.add(tagSquare);
-        } else {
-            blackPerson.add(tagSquare);
-        }
-
     }
 
-    public List<SquareRec> getRedPerson() {
-        return redPerson;
-    }
-
-    public List<SquareRec> getBlackPerson() {
-        return blackPerson;
-    }
 
     private boolean isContainBoard(float[] coodinate) {
 
@@ -356,6 +380,7 @@ public class Checkerboard {
         }
         return -1;
     }
+
 
     private int searchVerIndex(float y) {
 
