@@ -300,11 +300,11 @@ public class Checkerboard {
     /**
      * add step.
      */
-    public void addChess(float[] coodinate) {
+    public boolean addChess(float[] coodinate) {
 
         try {
             if (!isContainBoard(coodinate)) {
-                return;
+                return false;
             }
 
             int herIndex = searchHerIndex(coodinate[0]);
@@ -312,7 +312,7 @@ public class Checkerboard {
             int verIndex = searchVerIndex(coodinate[1]);
 
             if (herIndex == -1 || verIndex == -1) {
-                return;
+                return false;
             }
 
             if (existPoint == null) {
@@ -322,23 +322,27 @@ public class Checkerboard {
             String value = new StringBuffer().append(String.valueOf(herIndex)).append(
                     String.valueOf(verIndex)).toString();
             if (existPoint.contains(value)) {
-                return;
+                return false;
             }
 
             existPoint.add(value);
 
             SquareRec tagSquare = boardSquare.get(verIndex + 1).get(herIndex);
 
+            ChessLocation location = new ChessLocation(herIndex, verIndex);
             if (redPerson.size() <= blackPerson.size()) {
                 redPerson.add(tagSquare);
-                mAIChess.addRedLocation(new ChessLocation(herIndex, verIndex));
+                mAIChess.addRedLocation(location);
+                return mAIChess.isWin(location, AIChess.PERSON_RED);
             } else {
                 blackPerson.add(tagSquare);
                 mAIChess.addBlackLocation(new ChessLocation(herIndex, verIndex));
+                return mAIChess.isWin(location, AIChess.PERSON_BLACK);
             }
         } catch (Exception e) {
             LogUtil.e(e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -406,5 +410,29 @@ public class Checkerboard {
             }
         }
         return -1;
+    }
+
+    /**
+     * clean data
+     */
+    public void clean() {
+
+
+        if(redPerson!=null && !redPerson.isEmpty()){
+            redPerson.clear();
+        }
+
+        if(blackPerson!=null && !blackPerson.isEmpty()){
+            blackPerson.clear();
+        }
+
+        if(existPoint!=null && !existPoint.isEmpty()){
+            existPoint.clear();
+        }
+
+        if(mAIChess != null){
+            mAIChess.clear();
+        }
+
     }
 }

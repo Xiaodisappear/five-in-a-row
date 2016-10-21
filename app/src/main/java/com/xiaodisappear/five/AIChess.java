@@ -79,12 +79,28 @@ public class AIChess {
      */
     public boolean isWin(ChessLocation location, int person) {
 
-        if (!isLegalLocation(location) || person == 0) {
+        if (!isLegalLocation(location) || chessStatus.size() < 8 || person == 0) {
             return false;
         }
 
-        if ((leftContinuationCount(location, person) + rightContinuationCount(location, person))
-                > 4) {
+        if ((downOrUpContinuationCount(location, person, false)
+                + downOrUpContinuationCount(location, person, true))
+                >= 4) {
+            return true;
+        }
+
+        if ((leftOrRightContinuationCount(location, person, false)
+                + leftOrRightContinuationCount(location, person, true)) >= 4) {
+            return true;
+        }
+
+        if ((upleftOrRightDownContinuationCount(location, person, false)
+                + upleftOrRightDownContinuationCount(location, person, true)) >= 4) {
+            return true;
+        }
+
+        if ((downLeftOrUpRightContinuationCount(location, person, false)
+                + downLeftOrUpRightContinuationCount(location, person, true)) >= 4) {
             return true;
         }
 
@@ -92,9 +108,9 @@ public class AIChess {
     }
 
     /**
-     * How many pieces on the left side of the continuous.
+     * How many pieces on the up/down side of the continuous.
      */
-    private int leftContinuationCount(ChessLocation location, int person) {
+    private int downOrUpContinuationCount(ChessLocation location, int person, boolean isUp) {
 
         if (person == PERSON_NO) {
             return 0;
@@ -106,12 +122,17 @@ public class AIChess {
 
         for (int i = 1; i <= 5; i++) {
 
-            int xKey = x - 1;
+            int yKey;
+            if (isUp) {
+                yKey = y - i;
+            } else {
+                yKey = y + i;
+            }
 
-            if (xKey > 0) {
-                String key = new StringBuffer().append(String.valueOf(xKey)).append(y).toString();
-                int whoPerson = chessStatus.get(key);
-                if (person == whoPerson) {
+            if ((yKey > 0 && isUp) || (yKey < horNumber && !isUp)) {
+                String key = new StringBuffer().append(String.valueOf(x)).append(yKey).toString();
+                 Integer whoPerson = chessStatus.get(key);
+                if (whoPerson != null && person == whoPerson) {
                     count++;
                 } else {
                     return count;
@@ -126,9 +147,9 @@ public class AIChess {
     }
 
     /**
-     * How many pieces on the right side of the continuous.
+     * How many pieces on the left/right side of the continuous.
      */
-    private int rightContinuationCount(ChessLocation location, int person) {
+    private int leftOrRightContinuationCount(ChessLocation location, int person, boolean isLeft) {
 
         if (person == PERSON_NO) {
             return 0;
@@ -140,12 +161,61 @@ public class AIChess {
 
         for (int i = 1; i <= 5; i++) {
 
-            int xKey = x + 1;
+            int xKey;
+            if (isLeft) {
+                xKey = x - i;
+            } else {
+                xKey = x + i;
+            }
 
-            if (xKey > verNumber) {
+            if ((xKey > 0 && isLeft) || (xKey < horNumber && !isLeft)) {
                 String key = new StringBuffer().append(String.valueOf(xKey)).append(y).toString();
-                int whoPerson = chessStatus.get(key);
-                if (person == whoPerson) {
+                Integer whoPerson = chessStatus.get(key);
+                if (whoPerson != null && person == whoPerson) {
+                    count++;
+                } else {
+                    return count;
+                }
+            } else {
+                return count;
+            }
+
+        }
+
+        return count;
+    }
+
+    /**
+     * How many pieces on the upleft/downright side of the continuous.
+     */
+    private int upleftOrRightDownContinuationCount(ChessLocation location, int person,
+            boolean isUpleft) {
+        if (person == PERSON_NO) {
+            return 0;
+        }
+
+        int x = location.x;
+        int y = location.y;
+        int count = 0;
+
+        for (int i = 1; i <= 5; i++) {
+
+            int xKey;
+            int yKey;
+            if (isUpleft) {
+                xKey = x - i;
+                yKey = y - i;
+            } else {
+                xKey = x + i;
+                yKey = y + i;
+            }
+
+            if (((xKey > 0 && yKey > 0 && isUpleft) || (xKey < horNumber && yKey < verNumber
+                    && !isUpleft))) {
+                String key = new StringBuffer().append(String.valueOf(xKey)).append(
+                        yKey).toString();
+                Integer whoPerson = chessStatus.get(key);
+                if (whoPerson !=null && person == whoPerson) {
                     count++;
                 } else {
                     return count;
@@ -160,4 +230,64 @@ public class AIChess {
     }
 
 
+    /**
+     * How many pieces on the upright/downleft side of the continuous.
+     */
+    private int downLeftOrUpRightContinuationCount(ChessLocation location, int person,
+            boolean isDownLeft) {
+        if (person == PERSON_NO) {
+            return 0;
+        }
+
+        int x = location.x;
+        int y = location.y;
+        int count = 0;
+
+        for (int i = 1; i <= 5; i++) {
+
+            int xKey;
+            int yKey;
+            if (isDownLeft) {
+                xKey = x - i;
+                yKey = y + i;
+            } else {
+                xKey = x + i;
+                yKey = y - i;
+            }
+
+            if (((xKey > 0 && yKey < verNumber && isDownLeft) || (xKey < horNumber && yKey > 0
+                    && !isDownLeft))) {
+                String key = new StringBuffer().append(String.valueOf(xKey)).append(
+                        yKey).toString();
+                Integer whoPerson = chessStatus.get(key);
+                if (whoPerson != null && person == whoPerson) {
+                    count++;
+                } else {
+                    return count;
+                }
+            } else {
+                return count;
+            }
+
+        }
+
+        return count;
+    }
+
+
+    public void clear() {
+
+        if(redLocations!=null && !redLocations.isEmpty()){
+            redLocations.clear();
+        }
+
+        if(blackLocations!=null && !blackLocations.isEmpty()){
+            blackLocations.clear();
+        }
+
+        if(chessStatus!=null && !chessStatus.isEmpty()){
+            chessStatus.clear();
+        }
+
+    }
 }

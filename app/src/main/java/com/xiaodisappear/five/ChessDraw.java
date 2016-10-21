@@ -9,7 +9,9 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.annotation.NonNull;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,6 +43,11 @@ public class ChessDraw {
 
     }
 
+    private void cleanData() {
+        mCheckerboard.clean();
+    }
+
+
     private void initLinePaint() {
 
         mChessLinePaint = new Paint();
@@ -69,7 +76,10 @@ public class ChessDraw {
     }
 
     public void onTouchEvent(MotionEvent event) {
-        mCheckerboard.addChess(new float[]{event.getX(), event.getY()});
+        if (mCheckerboard.addChess(new float[]{event.getX(), event.getY()})) {
+            Toast.makeText(mContext, "你赢了", Toast.LENGTH_SHORT).show();
+            cleanData();
+        }
     }
 
 
@@ -103,12 +113,14 @@ public class ChessDraw {
                         mChessLinePaint);
             }
 
-            List<SquareRec> redPerson = mCheckerboard.getRedPerson();
+            List<SquareRec> redPerson = new ArrayList<>();
+            redPerson.addAll(mCheckerboard.getRedPerson());
 
             if (redPerson != null && redPerson.size() > 0) {
 
-                for (SquareRec squareRec : redPerson) {
+                for (int i = 0; i < redPerson.size(); i++) {
 
+                    SquareRec squareRec = redPerson.get(i);
                     if (squareRec == null) {
                         continue;
                     }
@@ -117,19 +129,21 @@ public class ChessDraw {
 
             }
 
-            List<SquareRec> blackPerson = mCheckerboard.getBlackPerson();
+            List<SquareRec> blackPerson = new ArrayList<>();
+            blackPerson.addAll(mCheckerboard.getBlackPerson());
 
             if (blackPerson != null && blackPerson.size() > 0) {
 
-                for (SquareRec squareRec : blackPerson) {
+                for (int i = 0; i < blackPerson.size(); i++) {
 
+                    SquareRec squareRec = blackPerson.get(i);
                     if (squareRec == null) {
                         continue;
                     }
                     canvas.drawBitmap(chessBlack, squareRec.leftTop[0], squareRec.leftTop[1], null);
                 }
-
             }
+
 
         } catch (Exception e) {
             e.printStackTrace();
