@@ -35,7 +35,7 @@ public class ChessDraw {
 
     private Paint mChessLinePaint;
 
-    public ChessDraw(Context context) {
+    public ChessDraw(@NonNull Context context) {
 
         this.mContext = context;
         initRes();
@@ -75,7 +75,7 @@ public class ChessDraw {
 
     }
 
-    public void onTouchEvent(MotionEvent event) {
+    public void onTouchEvent(@NonNull MotionEvent event) {
         if (mCheckerboard.addChess(new float[]{event.getX(), event.getY()})) {
             Toast.makeText(mContext, "你赢了", Toast.LENGTH_SHORT).show();
             cleanData();
@@ -143,8 +143,6 @@ public class ChessDraw {
                     canvas.drawBitmap(chessBlack, squareRec.leftTop[0], squareRec.leftTop[1], null);
                 }
             }
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,5 +1,8 @@
 package com.xiaodisappear.five;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +39,7 @@ public class AIChess {
     }
 
 
-    public void addRedLocation(ChessLocation location) {
+    public void addRedLocation(@NonNull ChessLocation location) {
 
         if (!isLegalLocation(location)) {
             return;
@@ -47,7 +50,7 @@ public class AIChess {
 
     }
 
-    public void addBlackLocation(ChessLocation location) {
+    public void addBlackLocation(@NonNull ChessLocation location) {
 
         if (!isLegalLocation(location)) {
             return;
@@ -61,7 +64,7 @@ public class AIChess {
     /**
      * Coordinates should be illegal？
      */
-    private boolean isLegalLocation(ChessLocation location) {
+    private boolean isLegalLocation(@NonNull ChessLocation location) {
 
         if (location == null) {
             return false;
@@ -77,7 +80,7 @@ public class AIChess {
     /**
      * who wins.
      */
-    public boolean isWin(ChessLocation location, int person) {
+    public boolean isWin(@NonNull ChessLocation location, int person) {
 
         if (!isLegalLocation(location) || chessStatus.size() < 8 || person == 0) {
             return false;
@@ -110,7 +113,8 @@ public class AIChess {
     /**
      * How many pieces on the up/down side of the continuous.
      */
-    private int downOrUpContinuationCount(ChessLocation location, int person, boolean isUp) {
+    private int downOrUpContinuationCount(@NonNull ChessLocation location, int person,
+            boolean isUp) {
 
         if (person == PERSON_NO) {
             return 0;
@@ -131,7 +135,7 @@ public class AIChess {
 
             if ((yKey > 0 && isUp) || (yKey < horNumber && !isUp)) {
                 String key = new StringBuffer().append(String.valueOf(x)).append(yKey).toString();
-                 Integer whoPerson = chessStatus.get(key);
+                Integer whoPerson = chessStatus.get(key);
                 if (whoPerson != null && person == whoPerson) {
                     count++;
                 } else {
@@ -149,7 +153,8 @@ public class AIChess {
     /**
      * How many pieces on the left/right side of the continuous.
      */
-    private int leftOrRightContinuationCount(ChessLocation location, int person, boolean isLeft) {
+    private int leftOrRightContinuationCount(@NonNull ChessLocation location, int person,
+            boolean isLeft) {
 
         if (person == PERSON_NO) {
             return 0;
@@ -188,7 +193,7 @@ public class AIChess {
     /**
      * How many pieces on the upleft/downright side of the continuous.
      */
-    private int upleftOrRightDownContinuationCount(ChessLocation location, int person,
+    private int upleftOrRightDownContinuationCount(@NonNull ChessLocation location, int person,
             boolean isUpleft) {
         if (person == PERSON_NO) {
             return 0;
@@ -215,7 +220,7 @@ public class AIChess {
                 String key = new StringBuffer().append(String.valueOf(xKey)).append(
                         yKey).toString();
                 Integer whoPerson = chessStatus.get(key);
-                if (whoPerson !=null && person == whoPerson) {
+                if (whoPerson != null && person == whoPerson) {
                     count++;
                 } else {
                     return count;
@@ -233,7 +238,7 @@ public class AIChess {
     /**
      * How many pieces on the upright/downleft side of the continuous.
      */
-    private int downLeftOrUpRightContinuationCount(ChessLocation location, int person,
+    private int downLeftOrUpRightContinuationCount(@NonNull ChessLocation location, int person,
             boolean isDownLeft) {
         if (person == PERSON_NO) {
             return 0;
@@ -277,17 +282,352 @@ public class AIChess {
 
     public void clear() {
 
-        if(redLocations!=null && !redLocations.isEmpty()){
+        if (redLocations != null && !redLocations.isEmpty()) {
             redLocations.clear();
         }
 
-        if(blackLocations!=null && !blackLocations.isEmpty()){
+        if (blackLocations != null && !blackLocations.isEmpty()) {
             blackLocations.clear();
         }
 
-        if(chessStatus!=null && !chessStatus.isEmpty()){
+        if (chessStatus != null && !chessStatus.isEmpty()) {
             chessStatus.clear();
         }
+    }
 
+    /**
+     * Anlaye this next step.
+     */
+    private ChessLocation isAnalyzeNextLocation(ChessLocation location) {
+
+        if (chessStatus.size() >= 6) {
+
+            ChessLocation nextLocation = analyzeDowOrUpLocation(location);
+            if (nextLocation != null) return nextLocation;
+
+            nextLocation = analyzeLeftOrRightLocation(location);
+            if (nextLocation != null) return nextLocation;
+
+            nextLocation = analyzeUpLeftOrDownRightLocation(location);
+            if (nextLocation != null) return nextLocation;
+
+            nextLocation = analyzeDownLeftOrUpRightLocation(location);
+            if (nextLocation != null) return nextLocation;
+
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private ChessLocation analyzeUpLeftOrDownRightLocation(ChessLocation location) {
+        int upLeft = upleftOrRightDownContinuationCount(location, PERSON_RED, false);
+        int downRight = upleftOrRightDownContinuationCount(location, PERSON_RED, true);
+        if (upLeft + downRight > 3) {
+            Integer value = null;
+            if (upLeft >= 3) {
+                if ((location.x - upLeft - 1 > 0) && (location.y - upLeft - 1 > 0)) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x - upLeft - 1)).append(
+                            String.valueOf(location.y - upLeft - 1)).toString());
+                }
+
+                if (value != null && value == PERSON_NO) {
+                    return new ChessLocation(location.x - upLeft - 1, location.y - upLeft - 1);
+                } else {
+                    if (location.x + 1 <= horNumber && location.y + 1 <= verNumber) {
+                        value = chessStatus.get(new StringBuffer().append(
+                                String.valueOf(location.x + 1)).append(
+                                location.y + 1).toString());
+
+                        if (value != null && value == PERSON_NO) {
+                            return new ChessLocation(location.x + 1, location.y + 1);
+                        }
+                    }
+                }
+            }
+
+            if (downRight >= 3) {
+                if ((location.x + downRight + 1 < horNumber) && (location.y + downRight + 1
+                        < verNumber)) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x + downRight + 1)).append(
+                            String.valueOf(location.y + downRight + 1)).toString());
+                }
+
+                if (value != null && value == PERSON_NO) {
+                    return new ChessLocation(location.x + downRight + 1,
+                            location.y + upLeft + 1);
+                } else {
+                    if (location.x - 1 > 0 && location.y - 1 > 0) {
+                        value = chessStatus.get(new StringBuffer().append(
+                                String.valueOf(location.x + 1)).append(
+                                location.y + 1).toString());
+
+                        if (value != null && value == PERSON_NO) {
+                            return new ChessLocation(location.x - 1, location.y - 1);
+                        }
+                    }
+                }
+            }
+
+            if ((location.x + downRight + 1 < horNumber) && (location.y + downRight + 1
+                    < verNumber)) {
+                value = chessStatus.get(new StringBuffer().append(
+                        String.valueOf(location.x + downRight + 1)).append(
+                        String.valueOf(location.y + downRight + 1)).toString());
+            }
+
+            if (value != null && value == PERSON_NO) {
+                return new ChessLocation(location.x + downRight + 1,
+                        location.y + upLeft + 1);
+            } else {
+                if (location.x - upLeft - 1 > 0 && location.y - upLeft - 1 > 0) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x - upLeft - 1)).append(
+                            location.y - upLeft - 1).toString());
+
+                    if (value != null && value == PERSON_NO) {
+                        return new ChessLocation(location.x - upLeft - 1,
+                                location.y - upLeft - 1);
+                    }
+                }
+            }
+
+
+        }
+        return null;
+    }
+
+    @Nullable
+    private ChessLocation analyzeDownLeftOrUpRightLocation(ChessLocation location) {
+        int downLeft = downLeftOrUpRightContinuationCount(location, PERSON_RED, false);
+        int upRight = downLeftOrUpRightContinuationCount(location, PERSON_RED, true);
+        if (downLeft + upRight > 3) {
+            Integer value = null;
+            if (downLeft >= 3) {
+                if ((location.x - downLeft - 1 > 0) && (location.y + downLeft + 1 <= verNumber)) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x - downLeft - 1)).append(
+                            String.valueOf(location.y + downLeft + 1)).toString());
+                }
+
+                if (value != null && value == PERSON_NO) {
+                    return new ChessLocation(location.x - downLeft - 1, location.y + downLeft - 1);
+                } else {
+                    if (location.x + 1 <= horNumber && location.y - 1 > 0) {
+                        value = chessStatus.get(new StringBuffer().append(
+                                String.valueOf(location.x + 1)).append(
+                                location.y - 1).toString());
+
+                        if (value != null && value == PERSON_NO) {
+                            return new ChessLocation(location.x + 1, location.y - 1);
+                        }
+                    }
+                }
+            }
+
+            if (upRight >= 3) {
+                if ((location.x + upRight + 1 <= horNumber) && (location.y - upRight - 1 > 0
+                )) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x + upRight + 1)).append(
+                            String.valueOf(location.y - upRight - 1)).toString());
+                }
+
+                if (value != null && value == PERSON_NO) {
+                    return new ChessLocation(location.x + upRight + 1,
+                            location.y - upRight - 1);
+                } else {
+                    if (location.x - 1 > 0 && location.y + 1 <= verNumber) {
+                        value = chessStatus.get(new StringBuffer().append(
+                                String.valueOf(location.x - 1)).append(
+                                location.y + 1).toString());
+
+                        if (value != null && value == PERSON_NO) {
+                            return new ChessLocation(location.x - 1, location.y - 1);
+                        }
+                    }
+                }
+            }
+
+            if ((location.x + upRight + 1 <= horNumber) && (location.y - upRight - 1
+                    > 0)) {
+                value = chessStatus.get(new StringBuffer().append(
+                        String.valueOf(location.x + upRight + 1)).append(
+                        String.valueOf(location.y - upRight - 1)).toString());
+            }
+
+            if (value != null && value == PERSON_NO) {
+                return new ChessLocation(location.x + upRight + 1,
+                        location.y - upRight - 1);
+            } else {
+                if (location.x - downLeft - 1 > 0 && location.y + downLeft + 1 <= verNumber) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x - downLeft - 1)).append(
+                            location.y + downLeft + 1).toString());
+
+                    if (value != null && value == PERSON_NO) {
+                        return new ChessLocation(location.x - downLeft - 1,
+                                location.y + downLeft + 1);
+                    }
+                }
+            }
+
+        }
+        return null;
+    }
+
+
+    @Nullable
+    private ChessLocation analyzeLeftOrRightLocation(@NonNull ChessLocation location) {
+
+        int left = leftOrRightContinuationCount(location, PERSON_RED, false);
+        int right = leftOrRightContinuationCount(location, PERSON_RED, true);
+
+        if (left + right < 3) {
+            return null;
+        }
+
+        Integer value = null;
+        if (left >= 3) {
+            if (location.x - 4 > 0) {
+                value = chessStatus.get(new StringBuffer().append(
+                        String.valueOf(location.x - 4)).append(
+                        String.valueOf(location.y)).toString());
+            }
+
+            if (value != null && value == PERSON_NO) {
+                return new ChessLocation(location.x - 4, location.y);
+            } else {
+                if (location.x + 1 <= horNumber) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x + 1)).append(
+                            String.valueOf(location.y)).toString());
+                }
+
+                if (value != null && value == PERSON_NO) {
+                    return new ChessLocation(location.x + 1, location.y);
+                }
+            }
+        }
+
+        if (right >= 3) {
+            if (location.x + 4 <= horNumber) {
+                value = chessStatus.get(new StringBuffer().append(
+                        String.valueOf(location.x + 4)).append(
+                        String.valueOf(location.y)).toString());
+            }
+
+            if (value != null && value == PERSON_NO) {
+                return new ChessLocation(location.x + 4, location.y);
+            } else {
+                if (location.x - 1 > 0) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x - 1)).append(
+                            String.valueOf(location.y)).toString());
+                }
+
+                if (value != null && value == PERSON_NO) {
+                    return new ChessLocation(location.x - 1, location.y);
+                }
+            }
+        }
+
+        if ((location.x - left - 1) > 0) {
+            value = chessStatus.get(new StringBuffer().append(
+                    String.valueOf(location.x - left - 1)).append(
+                    String.valueOf(location.y)).toString());
+            if (value != null && value == PERSON_NO) {
+                return new ChessLocation(location.x - left - 1, location.y);
+            } else {
+                if (location.x + right + 1 <= horNumber) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x + right + 1)).append(
+                            String.valueOf(location.y)).toString());
+
+                    if (value != null && value == PERSON_NO) {
+                        return new ChessLocation(location.x + right + 1,
+                                location.y);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private ChessLocation analyzeDowOrUpLocation(@NonNull ChessLocation location) {
+
+        int dow = downOrUpContinuationCount(location, PERSON_RED, false);
+        int up = downOrUpContinuationCount(location, PERSON_RED, true);
+
+        if (dow + up < 3) {
+            return null;
+        }
+
+        Integer value = null;
+        if (dow > 3) {
+            if (location.y + 4 <= verNumber) {
+                value = chessStatus.get(new StringBuffer().append(
+                        String.valueOf(location.x)).append(
+                        String.valueOf(location.y + 4)).toString());
+            }
+
+            if (value != null && value == PERSON_NO) {
+                return new ChessLocation(location.x, location.y + 4);
+            } else {
+                if (location.y - 1 > 0) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x)).append(
+                            String.valueOf(location.y - 1)).toString());
+                }
+
+                if (value != null && value == PERSON_NO) {
+                    return new ChessLocation(location.x, location.y - 1);
+                }
+            }
+        }
+
+        if (up > 3) {
+            if (location.y - 4 > 0) {
+                value = chessStatus.get(new StringBuffer().append(
+                        String.valueOf(location.x)).append(
+                        String.valueOf(location.y - 4)).toString());
+            }
+            if (value != null && value == PERSON_NO) {
+                return new ChessLocation(location.x, location.y - 4);
+            } else {
+                if (location.y + 1 <= verNumber) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x)).append(
+                            String.valueOf(location.y + 1)).toString());
+                }
+                if (value != null && value == PERSON_NO) {
+                    return new ChessLocation(location.x, location.y + 1);
+                }
+            }
+        }
+
+        if ((location.y + dow + 1) < verNumber) {
+            value = chessStatus.get(new StringBuffer().append(
+                    String.valueOf(location.x)).append(
+                    String.valueOf(location.y + dow + 1)).toString());
+            if (value != null && value == PERSON_NO) {
+                return new ChessLocation(location.x, location.y + dow + 1);
+            } else {
+                if (location.y - up - 1 > 0) {
+                    value = chessStatus.get(new StringBuffer().append(
+                            String.valueOf(location.x)).append(
+                            String.valueOf(location.y - up - 1)).toString());
+
+                    if (value != null && value == PERSON_NO) {
+                        return new ChessLocation(location.x, location.y - up - 1);
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
